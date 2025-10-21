@@ -1,3 +1,5 @@
+## Carregas bibliotecas
+
 library(dplyr)
 library(ggplot2)
 library(ggrepel)
@@ -8,13 +10,17 @@ library(scales)
 # PIBID
 ##########
 
-load("dados/bolsas_pibid_simulada.RData")
+## Importa dados
+## Dados salvo na pasta dados
 
+load("dados/bolsas_rp_simulada.RData")
 
 #####
 # Reorganizando dados
+#####
 
-bolsas_pibid_simulada <- bolsas_pibid_simulada %>%
+
+bolsas_rp_simulada <- bolsas_rp_simulada %>%
   mutate(id = paste(NM_BOLSISTA, NR_DOCUMENTO, sep="_"),
          area = case_when(grepl("LETRAS", DS_AREA_SUBPROJETO) ~ "LETRAS",
                           grepl("CAMPO", DS_AREA_SUBPROJETO) ~ "EDUCAÇÃO DO CAMPO",
@@ -41,6 +47,19 @@ p_geral <- bolsas_pibid_simulada %>%
   theme_minimal()
 
 ggsave(p_geral, file = "outputs/p_geral.png")
+
+# remuneração
+p_valor_bolsas <- bolsas_pibid_simulada %>%
+  group_by(AN_INICIO_BOLSA) %>%
+  summarise(valor = mean(VL_BOLSISTA_PAGAMENTO)) %>%
+  ggplot(aes(x=AN_INICIO_BOLSA, y=valor)) + geom_line() +
+  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
+  labs(x = "Ano de início da bolsa",
+       y = "Valor médio de bolsas PIBID R$") +
+  theme_minimal()
+
+ggsave(p_valor_bolsas, file = "outputs/p_valor_bolsas.png")
+
 
 # perc ppi ao longo do tempo
 p_ppi <- bolsas_pibid_simulada %>%
@@ -157,8 +176,8 @@ df_ies <- bolsas_pibid_simulada %>%
 df_final <- df_ies %>% group_by(DS_CATEGORIA_ADMINISTRATIVA) %>% slice_tail(n = 1)
 
 p_ies2 <-  ggplot(df_ies, aes(x = AN_INICIO_BOLSA, y = perc, 
-                             group = DS_CATEGORIA_ADMINISTRATIVA, 
-                             color = DS_CATEGORIA_ADMINISTRATIVA)) +
+                              group = DS_CATEGORIA_ADMINISTRATIVA, 
+                              color = DS_CATEGORIA_ADMINISTRATIVA)) +
   geom_line() +
   geom_text_repel(data = df_final,
                   aes(label = DS_CATEGORIA_ADMINISTRATIVA),
@@ -227,7 +246,7 @@ p_deficiencia <- bolsas_pibid_simulada %>%
          perc = num_bolsistas_unicos/total) %>%
   filter(ST_DEFICIENCIA == "S") %>%
   ggplot(aes(x=AN_INICIO_BOLSA, y=perc)) + 
-  geom_line() + scale_y_continuous(labels = scales::label_percent()) +
+  geom_line() + scale_y_continuous(labels = scales::label_percent(), limits = c(0,.015)) +
   scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de início da bolsa",
        y = "Percentual de bolsistas PIBID com deficiência",
