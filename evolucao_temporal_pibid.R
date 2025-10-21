@@ -122,7 +122,7 @@ p_area <- ggplot(df, aes(x = AN_INICIO_BOLSA, y = perc, group = area, color = ar
   theme(legend.position = "none") +
   xlim(min(df$AN_INICIO_BOLSA), max(df$AN_INICIO_BOLSA) + 1)  # espaço pro texto
 
-ggsave(p_area, file = "outputs/p_area.png", width = 8, height = 4.5, scale = .7)
+ggsave(p_area, file = "outputs/p_area.png", width = 8, height = 4.5, scale = .9)
 
 # area vs genero
 p_genero_area <- bolsas_pibid_simulada %>%
@@ -250,7 +250,7 @@ p_deficiencia <- bolsas_pibid_simulada %>%
   geom_line() + scale_y_continuous(labels = scales::label_percent(), limits = c(0,.015)) +
   scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de início da bolsa",
-       y = "Percentual de bolsistas PIBID com deficiência",
+       y = "Bolsistas PIBID com deficiência",
        color = "UF") +
   theme_minimal()
 
