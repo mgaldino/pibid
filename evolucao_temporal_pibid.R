@@ -1,10 +1,15 @@
 library(dplyr)
 library(ggplot2)
 library(ggrepel)
+library(forcats)
+library(scales)
 
-df1 <- load("dados/bolsas_pibid_simulada.RData")
-df2 <- load("dados/bolsas_rp_simulada.RData")
-glimpse(bolsas_pibid_simulada)
+#########
+# PIBID
+##########
+
+load("dados/bolsas_pibid_simulada.RData")
+
 
 #####
 # Reorganizando dados
@@ -30,14 +35,15 @@ p_geral <- bolsas_pibid_simulada %>%
   group_by(AN_INICIO_BOLSA) %>%
   summarise(num_bolsistas_unicos = n_distinct(id)) %>%
   ggplot(aes(x=AN_INICIO_BOLSA, y=num_bolsistas_unicos)) + geom_line() +
-  scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de início da bolsa",
-       y = "Percentual de bolsistas PIBID") +
+       y = "Número de bolsistas PIBID") +
   theme_minimal()
 
 ggsave(p_geral, file = "outputs/p_geral.png")
+
 # perc ppi ao longo do tempo
-bolsas_pibid_simulada %>%
+p_ppi <- bolsas_pibid_simulada %>%
   mutate(ppi = ifelse(NM_COR %in% c("PARDA", "PRETA", "INDÍGENA"), "ppi",
                       ifelse(NM_COR %in% c("Não informado", "IGNORAD"), NA, "não ppi"))) %>%
   group_by(AN_INICIO_BOLSA, ppi) %>%
@@ -47,13 +53,16 @@ bolsas_pibid_simulada %>%
          perc = num_bolsistas_unicos/total) %>%
   ggplot(aes(x=AN_INICIO_BOLSA, y=perc, group=ppi, color = ppi)) + geom_line() +
   scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de início da bolsa",
        y = "Percentual de bolsistas PIBID",
-       color = "ppi") +
+       color = "PPI") +
   theme_minimal()
 
-# perc sexo ao longo do tempo
-bolsas_pibid_simulada %>%
+ggsave(p_ppi, file = "outputs/p_ppi.png")
+
+# perc genero ao longo do tempo
+p_genero <- bolsas_pibid_simulada %>%
   filter(DS_TIPO_GENERO != "Não informado") %>%
   group_by(AN_INICIO_BOLSA, DS_TIPO_GENERO) %>%
   summarise(num_bolsistas_unicos = n_distinct(id)) %>%
@@ -61,10 +70,13 @@ bolsas_pibid_simulada %>%
          perc = num_bolsistas_unicos/total) %>%
   ggplot(aes(x=AN_INICIO_BOLSA, y=perc, group=DS_TIPO_GENERO, color = DS_TIPO_GENERO)) + 
   geom_line() + scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de início da bolsa",
        y = "Percentual de bolsistas PIBID",
        color = "Gênero") +
   theme_minimal()
+
+ggsave(p_genero, file = "outputs/p_genero.png")
 
 # Área ao longo do tempo
 df <- bolsas_pibid_simulada %>%
@@ -75,7 +87,7 @@ df <- bolsas_pibid_simulada %>%
 
 df_final <- df %>% group_by(area) %>% slice_tail(n = 1)
 
-ggplot(df, aes(x = AN_INICIO_BOLSA, y = perc, group = area, color = area)) +
+p_area <- ggplot(df, aes(x = AN_INICIO_BOLSA, y = perc, group = area, color = area)) +
   geom_line() +
   geom_text_repel(data = df_final,
                   aes(label = area),
@@ -90,9 +102,32 @@ ggplot(df, aes(x = AN_INICIO_BOLSA, y = perc, group = area, color = area)) +
   theme(legend.position = "none") +
   xlim(min(df$AN_INICIO_BOLSA), max(df$AN_INICIO_BOLSA) + 1)  # espaço pro texto
 
+ggsave(p_area, file = "outputs/p_area.png")
+
+# area vs genero
+p_genero_area <- bolsas_pibid_simulada %>%
+  filter(DS_TIPO_GENERO != "Não informado") %>%
+  group_by(AN_INICIO_BOLSA, area, DS_TIPO_GENERO) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  mutate(total = sum(num_bolsistas_unicos),
+         perc = num_bolsistas_unicos/total) %>%
+  ggplot(aes(x=AN_INICIO_BOLSA, y=perc, group=area, color = area)) + 
+  geom_line() + scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
+  facet_wrap(~ DS_TIPO_GENERO) + 
+  labs(x = "Ano de início da bolsa",
+       y = "Percentual de bolsistas PIBID",
+       color = "Área") +
+  theme_minimal() +  
+  theme(
+    legend.position = "bottom",
+    legend.box = "horizontal")
+
+ggsave(p_genero_area, file = "outputs/p_genero_area.png")
+
 # tipo de IEs ao longo do tempo
 
-bolsas_pibid_simulada %>%
+p_ies <- bolsas_pibid_simulada %>%
   filter(DS_TIPO_GENERO != "Não informado") %>%
   group_by(AN_INICIO_BOLSA, DS_ORGANIZACAO_ACADEMICA) %>%
   summarise(num_bolsistas_unicos = n_distinct(id)) %>%
@@ -100,14 +135,52 @@ bolsas_pibid_simulada %>%
          perc = num_bolsistas_unicos/total) %>%
   ggplot(aes(x=AN_INICIO_BOLSA, y=perc, group=DS_ORGANIZACAO_ACADEMICA, color = DS_ORGANIZACAO_ACADEMICA)) + 
   geom_line() + scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de início da bolsa",
        y = "Percentual de bolsistas PIBID",
        color = "IES") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    legend.box = "horizontal")
+
+
+ggsave(p_ies, file = "outputs/p_ies.png")
+
+# Tipo de IES 2 
+df_ies <- bolsas_pibid_simulada %>%
+  group_by(AN_INICIO_BOLSA, DS_CATEGORIA_ADMINISTRATIVA) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  mutate(total = sum(num_bolsistas_unicos),
+         perc = num_bolsistas_unicos / total)
+
+df_final <- df_ies %>% group_by(DS_CATEGORIA_ADMINISTRATIVA) %>% slice_tail(n = 1)
+
+p_ies2 <-  ggplot(df_ies, aes(x = AN_INICIO_BOLSA, y = perc, 
+                             group = DS_CATEGORIA_ADMINISTRATIVA, 
+                             color = DS_CATEGORIA_ADMINISTRATIVA)) +
+  geom_line() +
+  geom_text_repel(data = df_final,
+                  aes(label = DS_CATEGORIA_ADMINISTRATIVA),
+                  nudge_x = 0.3,
+                  direction = "y",
+                  hjust = 0,
+                  segment.color = NA) +
+  labs(x = "Ano de início da bolsa",
+       y = "Percentual de bolsistas PIBID") +
+  scale_y_continuous(labels = scales::label_percent()) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  xlim(min(df$AN_INICIO_BOLSA), max(df$AN_INICIO_BOLSA) + 1)  # espaço pro texto
+
+
+ggsave(p_ies2, file = "outputs/p_ies2.png")
+
+
 
 ###
 # Região ao longo do tempo
-bolsas_pibid_simulada %>%
+p_regiao <- bolsas_pibid_simulada %>%
   filter(DS_TIPO_GENERO != "Não informado") %>%
   group_by(AN_INICIO_BOLSA, NM_REGIAO) %>%
   summarise(num_bolsistas_unicos = n_distinct(id)) %>%
@@ -115,10 +188,14 @@ bolsas_pibid_simulada %>%
          perc = num_bolsistas_unicos/total) %>%
   ggplot(aes(x=AN_INICIO_BOLSA, y=perc, group=NM_REGIAO, color = NM_REGIAO)) + 
   geom_line() + scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de início da bolsa",
        y = "Percentual de bolsistas PIBID",
        color = "Região") +
   theme_minimal()
+
+ggsave(p_regiao, file = "outputs/p_regiao.png")
+
 
 ###
 # UF ao longo do tempo
@@ -129,12 +206,58 @@ df_uf <- bolsas_pibid_simulada %>%
   mutate(total = sum(num_bolsistas_unicos),
          perc = num_bolsistas_unicos/total)
 
-df_uf %>%
+p_uf <- df_uf %>%
   ggplot(aes(x=AN_INICIO_BOLSA, y=perc, group=COD_UF)) + 
   geom_line() + scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   facet_wrap(~ reorder(COD_UF, perc), ncol = 6, scales = "free_y") +
   labs(x = "Ano de início da bolsa",
        y = "Percentual de bolsistas PIBID",
        color = "UF") +
   theme_minimal()
+
+ggsave(p_uf, file = "outputs/p_uf.png")
+
+# Bolsistas com deficiência ao longo do tempo
+
+p_deficiencia <- bolsas_pibid_simulada %>%
+  group_by(AN_INICIO_BOLSA, ST_DEFICIENCIA) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  mutate(total = sum(num_bolsistas_unicos),
+         perc = num_bolsistas_unicos/total) %>%
+  filter(ST_DEFICIENCIA == "S") %>%
+  ggplot(aes(x=AN_INICIO_BOLSA, y=perc)) + 
+  geom_line() + scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
+  labs(x = "Ano de início da bolsa",
+       y = "Percentual de bolsistas PIBID com deficiência",
+       color = "UF") +
+  theme_minimal()
+
+ggsave(p_deficiencia, file = "outputs/p_deficiencia.png")
+
+
+
+# edital
+
+df <- bolsas_pibid_simulada %>%
+  group_by(AN_INICIO_BOLSA, DS_PROJETO) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id), .groups = "drop_last") %>%
+  mutate(total = sum(num_bolsistas_unicos),
+         perc  = num_bolsistas_unicos / total) %>%
+  ungroup() %>%
+  group_by(DS_PROJETO) %>%
+  mutate(total_proj = sum(num_bolsistas_unicos)) %>%      # para ordenar linhas por relevância
+  ungroup() %>%
+  mutate(DS_PROJETO = fct_reorder(DS_PROJETO, total_proj))
+
+p_edital <- ggplot(df, aes(x = AN_INICIO_BOLSA, y = DS_PROJETO, fill = perc)) +
+  geom_tile() +
+  scale_fill_viridis_c(labels = scales::percent, option = "C", direction = 1,
+                       na.value = "grey95", name = "Participação") +
+  labs(x = "Ano", y = NULL) +
+  theme_minimal(base_size = 11) +
+  theme(legend.position = "bottom")
+
+ggsave(p_edital, file = "outputs/p_edital.png")
 
