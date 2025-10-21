@@ -2,8 +2,10 @@ library(dplyr)
 library(ggplot2)
 library(ggrepel)
 
-df2 <- load("dados/bolsas_rp_simulada.RData")
-glimpse(bolsas_rp_simulada)
+## Importa dados
+## Dados salvo na pasta dados
+
+load("dados/bolsas_rp_simulada.RData")
 
 #####
 # Reorganizando dados
