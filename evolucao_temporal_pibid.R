@@ -6,6 +6,7 @@ library(ggrepel)
 library(forcats)
 library(scales)
 
+
 #########
 # PIBID
 ##########
@@ -46,7 +47,7 @@ p_geral <- bolsas_pibid_simulada %>%
        y = "Número de bolsistas PIBID") +
   theme_minimal()
 
-ggsave(p_geral, file = "outputs/p_geral.png")
+ggsave(p_geral, file = "outputs/p_geral.png", width = 8, height = 4.5, scale = .7)
 
 # remuneração
 p_valor_bolsas <- bolsas_pibid_simulada %>%
@@ -58,7 +59,7 @@ p_valor_bolsas <- bolsas_pibid_simulada %>%
        y = "Valor médio de bolsas PIBID R$") +
   theme_minimal()
 
-ggsave(p_valor_bolsas, file = "outputs/p_valor_bolsas.png")
+ggsave(p_valor_bolsas, file = "outputs/p_valor_bolsas.png", width = 8, height = 4.5, scale = .7)
 
 
 # perc ppi ao longo do tempo
@@ -78,7 +79,7 @@ p_ppi <- bolsas_pibid_simulada %>%
        color = "PPI") +
   theme_minimal()
 
-ggsave(p_ppi, file = "outputs/p_ppi.png")
+ggsave(p_ppi, file = "outputs/p_ppi.png", width = 8, height = 4.5, scale = .7)
 
 # perc genero ao longo do tempo
 p_genero <- bolsas_pibid_simulada %>%
@@ -95,7 +96,7 @@ p_genero <- bolsas_pibid_simulada %>%
        color = "Gênero") +
   theme_minimal()
 
-ggsave(p_genero, file = "outputs/p_genero.png")
+ggsave(p_genero, file = "outputs/p_genero.png", width = 8, height = 4.5, scale = .7)
 
 # Área ao longo do tempo
 df <- bolsas_pibid_simulada %>%
@@ -121,7 +122,7 @@ p_area <- ggplot(df, aes(x = AN_INICIO_BOLSA, y = perc, group = area, color = ar
   theme(legend.position = "none") +
   xlim(min(df$AN_INICIO_BOLSA), max(df$AN_INICIO_BOLSA) + 1)  # espaço pro texto
 
-ggsave(p_area, file = "outputs/p_area.png")
+ggsave(p_area, file = "outputs/p_area.png", width = 8, height = 4.5, scale = .7)
 
 # area vs genero
 p_genero_area <- bolsas_pibid_simulada %>%
@@ -142,7 +143,7 @@ p_genero_area <- bolsas_pibid_simulada %>%
     legend.position = "bottom",
     legend.box = "horizontal")
 
-ggsave(p_genero_area, file = "outputs/p_genero_area.png")
+ggsave(p_genero_area, file = "outputs/p_genero_area.png", width = 8, height = 4.5, scale = .7)
 
 # tipo de IEs ao longo do tempo
 
@@ -164,7 +165,7 @@ p_ies <- bolsas_pibid_simulada %>%
     legend.box = "horizontal")
 
 
-ggsave(p_ies, file = "outputs/p_ies.png")
+ggsave(p_ies, file = "outputs/p_ies.png", width = 8, height = 4.5, scale = .7)
 
 # Tipo de IES 2 
 df_ies <- bolsas_pibid_simulada %>%
@@ -193,7 +194,7 @@ p_ies2 <-  ggplot(df_ies, aes(x = AN_INICIO_BOLSA, y = perc,
   xlim(min(df$AN_INICIO_BOLSA), max(df$AN_INICIO_BOLSA) + 1)  # espaço pro texto
 
 
-ggsave(p_ies2, file = "outputs/p_ies2.png")
+ggsave(p_ies2, file = "outputs/p_ies2.png", width = 8, height = 4.5, scale = .7)
 
 
 
@@ -213,7 +214,7 @@ p_regiao <- bolsas_pibid_simulada %>%
        color = "Região") +
   theme_minimal()
 
-ggsave(p_regiao, file = "outputs/p_regiao.png")
+ggsave(p_regiao, file = "outputs/p_regiao.png", width = 8, height = 4.5, scale = .7)
 
 
 ###
@@ -235,7 +236,7 @@ p_uf <- df_uf %>%
        color = "UF") +
   theme_minimal()
 
-ggsave(p_uf, file = "outputs/p_uf.png")
+ggsave(p_uf, file = "outputs/p_uf.png", width = 8, height = 4.5, scale = .7)
 
 # Bolsistas com deficiência ao longo do tempo
 
@@ -253,7 +254,7 @@ p_deficiencia <- bolsas_pibid_simulada %>%
        color = "UF") +
   theme_minimal()
 
-ggsave(p_deficiencia, file = "outputs/p_deficiencia.png")
+ggsave(p_deficiencia, file = "outputs/p_deficiencia.png", width = 8, height = 4.5, scale = .7)
 
 
 
@@ -278,5 +279,5 @@ p_edital <- ggplot(df, aes(x = AN_INICIO_BOLSA, y = DS_PROJETO, fill = perc)) +
   theme_minimal(base_size = 11) +
   theme(legend.position = "bottom")
 
-ggsave(p_edital, file = "outputs/p_edital.png")
+ggsave(p_edital, file = "outputs/p_edital.png", width = 8, height = 4.5, scale = .7)
 
