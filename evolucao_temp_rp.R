@@ -1,6 +1,10 @@
+## Carrega bibliotecas
+
 library(dplyr)
 library(ggplot2)
 library(ggrepel)
+library(forcats)
+library(scales)
 
 ## Importa dados
 ## Dados salvo na pasta dados
@@ -24,17 +28,20 @@ bolsas_rp_simulada <- bolsas_rp_simulada %>%
                           grepl("RELIG", DS_AREA_SUBPROJETO) ~ "RELIGIÃO",
                           .default = DS_AREA_SUBPROJETO)) 
 
+bolsas_rp_simulada <- bolsas_rp_simulada %>%
+  filter(NM_NIVEL == "RESIDENTE") # só discentes bolsistas
+
+
 # evolução temporal
 
 # Panorama geral
 p_geral_rp <- bolsas_rp_simulada %>%
-  filter(NM_NIVEL == "INICIAÇÃO A DOCÊNCIA") %>%
   group_by(AN_REFERENCIA) %>%
   summarise(num_bolsistas_unicos = n_distinct(id)) %>%
   ggplot(aes(x=AN_REFERENCIA, y=num_bolsistas_unicos)) + geom_line() +
   scale_x_continuous(breaks = seq(2016, 2022, by=3)) + 
   labs(x = "Ano de referência",
-       y = "Número de bolsistas RP") +
+       y = "Número de bolsistas PRP") +
   theme_minimal()
 
 ggsave(p_geral_rp, file = "outputs/p_geral_rp.png")
@@ -46,7 +53,7 @@ p_valor_bolsas_rp <- bolsas_rp_simulada %>%
   ggplot(aes(x=AN_REFERENCIA, y=valor)) + geom_line() +
   scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de referência",
-       y = "Valor médio de bolsas RP R$") +
+       y = "Valor médio de bolsas PRP R$") +
   theme_minimal()
 
 ggsave(p_valor_bolsas_rp, file = "outputs/p_valor_bolsas_rp.png")
@@ -64,7 +71,7 @@ p_ppi_rp <- bolsas_rp_simulada %>%
   scale_y_continuous(labels = scales::label_percent()) +
   scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de referência",
-       y = "Percentual de bolsistas RP",
+       y = "Percentual de bolsistas PRP",
        color = "PPI") +
   theme_minimal()
 
@@ -81,7 +88,7 @@ p_genero_rp <- bolsas_rp_simulada %>%
   geom_line() + scale_y_continuous(labels = scales::label_percent()) +
   scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de referência",
-       y = "Percentual de bolsistas RP",
+       y = "Percentual de bolsistas PRP",
        color = "Gênero") +
   theme_minimal()
 
@@ -105,7 +112,7 @@ p_area_rp <- ggplot(df, aes(x = AN_REFERENCIA, y = perc, group = area, color = a
                   hjust = 0,
                   segment.color = NA) +
   labs(x = "Ano de referência",
-       y = "Percentual de bolsistas RP") +
+       y = "Percentual de bolsistas PRP") +
   scale_y_continuous(labels = scales::label_percent()) +
   theme_minimal() +
   theme(legend.position = "none") +
@@ -125,7 +132,7 @@ p_genero_area_rp <- bolsas_rp_simulada %>%
   scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   facet_wrap(~ DS_TIPO_GENERO) + 
   labs(x = "Ano de referência",
-       y = "Percentual de bolsistas RP",
+       y = "Percentual de bolsistas PRP",
        color = "Área") +
   theme_minimal() +  
   theme(
@@ -146,7 +153,7 @@ p_ies_rp <- bolsas_rp_simulada %>%
   geom_line() + scale_y_continuous(labels = scales::label_percent()) +
   scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de referência",
-       y = "Percentual de bolsistas RP",
+       y = "Percentual de bolsistas PRP",
        color = "IES") +
   theme_minimal() +
   theme(
@@ -169,7 +176,7 @@ p_regiao_rp <- bolsas_rp_simulada %>%
   geom_line() + scale_y_continuous(labels = scales::label_percent()) +
   scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de referência",
-       y = "Percentual de bolsistas RP",
+       y = "Percentual de bolsistas PRP",
        color = "Região") +
   theme_minimal()
 
@@ -191,7 +198,7 @@ p_uf_rp <- df_uf %>%
   scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   facet_wrap(~ reorder(COD_UF, perc), ncol = 6, scales = "free_y") +
   labs(x = "Ano de referência",
-       y = "Percentual de bolsistas RP",
+       y = "Percentual de bolsistas PRP",
        color = "UF") +
   theme_minimal()
 
@@ -209,7 +216,7 @@ p_deficiencia_rp <- bolsas_rp_simulada %>%
   geom_line() + scale_y_continuous(labels = scales::label_percent(), limits = c(0,.015)) +
   scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de referência",
-       y = "Percentual de bolsistas RP com deficiência",
+       y = "Percentual de bolsistas PRP com deficiência",
        color = "UF") +
   theme_minimal()
 
@@ -233,7 +240,7 @@ df <- bolsas_rp_simulada %>%
 p_edital_rp <- ggplot(df, aes(x = AN_REFERENCIA, y = DS_PROJETO, fill = perc)) +
   geom_tile() +
   scale_fill_viridis_c(labels = scales::percent, option = "C", direction = 1,
-                       na.value = "grey95", name = "Participação") +
+                       na.value = "grey95", name = "Participação no PRP") +
   labs(x = "Ano", y = NULL) +
   theme_minimal(base_size = 11) +
   theme(legend.position = "bottom")

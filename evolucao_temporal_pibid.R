@@ -1,4 +1,4 @@
-## Carregas bibliotecas
+## Carrega bibliotecas
 
 library(dplyr)
 library(ggplot2)
