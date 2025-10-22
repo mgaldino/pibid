@@ -14,14 +14,14 @@ library(scales)
 ## Importa dados
 ## Dados salvo na pasta dados
 
-load("dados/bolsas_rp_simulada.RData")
+load("dados/bolsas_pibid_simulada.RData")
 
 #####
 # Reorganizando dados
 #####
 
 
-bolsas_rp_simulada <- bolsas_rp_simulada %>%
+bolsas_pibid_simulada <- bolsas_pibid_simulada %>%
   mutate(id = paste(NM_BOLSISTA, NR_DOCUMENTO, sep="_"),
          area = case_when(grepl("LETRAS", DS_AREA_SUBPROJETO) ~ "LETRAS",
                           grepl("CAMPO", DS_AREA_SUBPROJETO) ~ "EDUCAÇÃO DO CAMPO",
@@ -219,20 +219,31 @@ ggsave(p_ies2, file = "outputs/p_ies2.png", width = 8, height = 4.5, scale = .7)
 
 ###
 # Região ao longo do tempo
-p_regiao <- bolsas_pibid_simulada %>%
+df_regiao <- bolsas_pibid_simulada %>%
   filter(NM_NIVEL == "INICIAÇÃO A DOCÊNCIA") %>%
-  filter(DS_TIPO_GENERO != "Não informado") %>%
   group_by(AN_REFERENCIA, NM_REGIAO) %>%
   summarise(num_bolsistas_unicos = n_distinct(id)) %>%
   mutate(total = sum(num_bolsistas_unicos),
-         perc = num_bolsistas_unicos/total) %>%
+         perc = num_bolsistas_unicos / total)
+
+df_final_reg <- df_regiao %>% group_by(NM_REGIAO) %>% slice_tail(n = 1)
+
+
+p_regiao <- df_regiao %>%
   ggplot(aes(x=AN_REFERENCIA, y=perc, group=NM_REGIAO, color = NM_REGIAO)) + 
   geom_line() + scale_y_continuous(labels = scales::label_percent()) +
+  geom_text_repel(data = df_final_reg,
+                  aes(label = NM_REGIAO),
+                  nudge_x = 0.3,
+                  direction = "y",
+                  hjust = 0,
+                  segment.color = NA) +
   scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
   labs(x = "Ano de referência",
        y = "Percentual de bolsistas PIBID",
        color = "Região") +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = "none") 
 
 ggsave(p_regiao, file = "outputs/p_regiao.png", width = 8, height = 4.5, scale = .7)
 
