@@ -87,7 +87,7 @@ p_ppi <- bolsas_pibid_simulada %>%
 
 ggsave(p_ppi, file = "outputs/p_ppi.png", width = 8, height = 4.5, scale = .7)
 
-# perc genero ao longo do tempo
+# perc gênero ao longo do tempo
 p_genero <- bolsas_pibid_simulada %>%
   filter(NM_NIVEL == "INICIAÇÃO A DOCÊNCIA") %>%
   filter(DS_TIPO_GENERO != "Não informado") %>%
@@ -210,22 +210,42 @@ ggsave("outputs/p_micro_outras.png", p_micro_outras, width = 8, height = 4.5, sc
 
 # todas as áreas, caso fique legível
 
-p_micro_area <- ggplot(df, aes(x = AN_REFERENCIA, y = perc, group = DS_AREA_SUBPROJETO, color = DS_AREA_SUBPROJETO)) +
-  geom_line() +
-  geom_text_repel(data = df_final,
-                  aes(label = DS_AREA_SUBPROJETO),
-                  nudge_x = 0.3,
-                  direction = "y",
-                  hjust = 0,
-                  segment.color = NA) +
-  labs(x = "Ano de referência",
-       y = "Percentual de bolsistas PIBID") +
-  scale_y_continuous(labels = scales::label_percent()) +
-  theme_minimal() +
-  theme(legend.position = "none") +
-  xlim(min(df$AN_REFERENCIA), max(df$AN_REFERENCIA) + 1)  # espaço pro texto
 
-ggsave(p_micro_area, file = "outputs/p_micro_area.png", width = 8, height = 4.5, scale = .9)
+## Area micro
+
+df <- bolsas_rp_simulada %>%
+  group_by(AN_REFERENCIA, DS_AREA_SUBPROJETO) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  mutate(total = sum(num_bolsistas_unicos),
+         perc = num_bolsistas_unicos / total)
+
+p_area_micro_todas <- ggplot(df, aes(x = AN_REFERENCIA, y = perc)) +
+  geom_line() + facet_wrap(~DS_AREA_SUBPROJETO) +
+  labs(x = "Ano de referência",
+       y = "Percentual de bolsistas PRP") +
+  scale_y_continuous(labels = scales::label_percent()) +
+  theme_minimal()
+
+ggsave(p_area_micro_todas, file = "outputs/p_area_micro_todas.png")
+
+# area vs genero
+p_genero_area_micro <- bolsas_rp_simulada %>%
+  filter(DS_TIPO_GENERO != "Não informado") %>%
+  group_by(AN_REFERENCIA, DS_AREA_SUBPROJETO, DS_TIPO_GENERO) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  mutate(total = sum(num_bolsistas_unicos),
+         perc = num_bolsistas_unicos/total) %>%
+  ggplot(aes(x=AN_REFERENCIA, y=perc)) + 
+  geom_line() + scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
+  facet_wrap(~ DS_AREA_SUBPROJETO) + 
+  labs(x = "Ano de referência",
+       y = "Percentual de bolsistas PRP",
+       color = "Área") +
+  theme_minimal()
+
+ggsave(p_genero_area_micro, file = "outputs/p_genero_area_micro.png")
+
 
 
 # Macro area vs genero
@@ -348,7 +368,6 @@ ggsave(p_regiao, file = "outputs/p_regiao.png", width = 8, height = 4.5, scale =
 # UF ao longo do tempo
 df_uf <- bolsas_pibid_simulada %>%
   filter(NM_NIVEL == "INICIAÇÃO A DOCÊNCIA") %>%
-  filter(DS_TIPO_GENERO != "Não informado") %>%
   group_by(AN_REFERENCIA, COD_UF) %>%
   summarise(num_bolsistas_unicos = n_distinct(id)) %>%
   mutate(total = sum(num_bolsistas_unicos),
@@ -387,7 +406,7 @@ ggsave(p_deficiencia, file = "outputs/p_deficiencia.png", width = 8, height = 4.
 
 
 
-# edital
+# edital geral
 
 df <- bolsas_pibid_simulada %>%
   filter(NM_NIVEL == "INICIAÇÃO A DOCÊNCIA") %>%
@@ -410,6 +429,7 @@ p_edital <- ggplot(df, aes(x = AN_REFERENCIA, y = DS_PROJETO, fill = perc)) +
   theme(legend.position = "bottom")
 
 ggsave(p_edital, file = "outputs/p_edital.png", width = 8, height = 4.5, scale = .7)
+
 
 # tempo mínimo, médio etc.
 tempo_por_programa <- bolsas_pibid_simulada %>%

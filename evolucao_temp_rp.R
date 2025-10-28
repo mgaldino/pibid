@@ -23,8 +23,9 @@ bolsas_rp_simulada <- bolsas_rp_simulada %>%
                           grepl("FILOSOFIA|HISTÓRIA|GEOGRAFIA|CIÊNCIAS SOCIAIS|SOCIOLOGIA", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS HUMANAS",
                           grepl("AGRONOMIA|QUÍMICA|BIOLOGIA|CIÊNCIAS AGRÁRIAS|GEOLOGIA", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS NATURAIS",
                           grepl("ARTES|DANÇA|TEATRO|MÚSICA", DS_AREA_SUBPROJETO) ~ "ARTES",
-                          grepl("INFANTIL|ALFABETIZAÇÃO|", DS_AREA_SUBPROJETO) ~ "EDUCAÇÃO INFANTIL",
-                          grepl("MATEMÁTICA|^FÍSICA", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS EXATAS",
+                          grepl("INFANTIL|ALFABETIZAÇÃO", DS_AREA_SUBPROJETO) ~ "EDUCAÇÃO INFANTIL",
+                          grepl("MATEMÁTICA", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS EXATAS",
+                          grepl("FÍSICA$", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS EXATAS",
                           grepl("RELIG", DS_AREA_SUBPROJETO) ~ "RELIGIÃO",
                           .default = DS_AREA_SUBPROJETO)) 
 
@@ -77,7 +78,7 @@ p_ppi_rp <- bolsas_rp_simulada %>%
 
 ggsave(p_ppi_rp, file = "outputs/p_ppi_rp.png")
 
-# perc genero ao longo do tempo
+# perc gênero ao longo do tempo
 p_genero_rp <- bolsas_rp_simulada %>%
   filter(DS_TIPO_GENERO != "Não informado") %>%
   group_by(AN_REFERENCIA, DS_TIPO_GENERO) %>%
@@ -119,6 +120,120 @@ p_area_rp <- ggplot(df, aes(x = AN_REFERENCIA, y = perc, group = area, color = a
   xlim(min(df$AN_REFERENCIA), max(df$AN_REFERENCIA) + 1)  # espaço pro texto
 
 ggsave(p_area_rp, file = "outputs/p_area_rp.png")
+
+
+# Micro Área ao longo do tempo
+df <- bolsas_rp_simulada %>%
+  group_by(AN_REFERENCIA, DS_AREA_SUBPROJETO, area) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  mutate(total = sum(num_bolsistas_unicos),
+         perc = num_bolsistas_unicos / total) %>%
+  ungroup()
+
+ordem <- df %>%
+  group_by(DS_AREA_SUBPROJETO, area) %>%
+  arrange(AN_REFERENCIA) %>%
+  summarise(ultimo = last(perc), .groups = "drop") %>%
+  arrange(desc(ultimo)) %>%
+  pull(DS_AREA_SUBPROJETO)
+
+# Ciências Naturais
+p_rp_micro_c_naturais <- df %>%
+  filter(area == "CIÊNCIAS NATURAIS" ) %>% 
+  mutate(DS_AREA_SUBPROJETO = factor(DS_AREA_SUBPROJETO, levels = ordem)) %>%
+  ggplot(aes(x = AN_REFERENCIA, y = perc, group = DS_AREA_SUBPROJETO)) +
+  geom_line(linewidth = 0.6) +
+  facet_wrap(~ DS_AREA_SUBPROJETO, scales = "free_y", ncol = 5) +
+  scale_y_continuous(labels = scales::label_percent(accuracy = 0.1)) +
+  labs(x = "Ano de referência", y = "% de bolsistas PIBID") +
+  theme_minimal(base_size = 11) +
+  theme(strip.text = element_text(size = 8))
+
+ggsave("outputs/p_rp_micro_c_naturais.png", p_rp_micro_c_naturais, width = 8, height = 4.5, scale = .8)
+
+# Humanas
+p_rp_micro_c_humanas <- df %>%
+  filter(area == "CIÊNCIAS HUMANAS" ) %>%
+  mutate(DS_AREA_SUBPROJETO = factor(DS_AREA_SUBPROJETO, levels = ordem)) %>%
+  ggplot(aes(x = AN_REFERENCIA, y = perc, group = DS_AREA_SUBPROJETO)) +
+  geom_line(linewidth = 0.6) +
+  facet_wrap(~ DS_AREA_SUBPROJETO, scales = "free_y", ncol = 5) +
+  scale_y_continuous(labels = scales::label_percent(accuracy = 0.1)) +
+  labs(x = "Ano de referência", y = "% de bolsistas PIBID") +
+  theme_minimal(base_size = 11) +
+  theme(strip.text = element_text(size = 8))
+
+ggsave("outputs/p_rp_micro_c_humanas.png", p_rp_micro_c_humanas, width = 8, height = 4.5, scale = .8)
+
+# exatas
+p_rp_micro_c_exatas <- df %>%
+  filter(area == "CIÊNCIAS EXATAS" ) %>%
+  mutate(DS_AREA_SUBPROJETO = factor(DS_AREA_SUBPROJETO, levels = ordem)) %>%
+  ggplot(aes(x = AN_REFERENCIA, y = perc, group = DS_AREA_SUBPROJETO)) +
+  geom_line(linewidth = 0.6) +
+  facet_wrap(~ DS_AREA_SUBPROJETO, scales = "free_y", ncol = 5) +
+  scale_y_continuous(labels = scales::label_percent(accuracy = 0.1)) +
+  labs(x = "Ano de referência", y = "% de bolsistas PIBID") +
+  theme_minimal(base_size = 11) +
+  theme(strip.text = element_text(size = 8))
+
+ggsave("outputs/p_rp_micro_c_exatas.png", p_rp_micro_c_exatas, width = 8, height = 4.5, scale = .8)
+
+
+## Outras
+
+p_rp_micro_outras <- df %>%
+  filter(!area %in% c("CIÊNCIAS HUMANAS", "CIÊNCIAS NATURAIS") ) %>%
+  mutate(DS_AREA_SUBPROJETO = factor(DS_AREA_SUBPROJETO, levels = ordem)) %>%
+  ggplot(aes(x = AN_REFERENCIA, y = perc, group = DS_AREA_SUBPROJETO)) +
+  geom_line(linewidth = 0.6) +
+  facet_wrap(~ DS_AREA_SUBPROJETO, scales = "free_y", ncol = 5) +
+  scale_y_continuous(labels = scales::label_percent(accuracy = 0.1)) +
+  labs(x = "Ano de referência", y = "% de bolsistas PIBID") +
+  theme_minimal(base_size = 11) +
+  theme(strip.text = element_text(size = 8))
+
+ggsave("outputs/p_rp_micro_outras.png", p_rp_micro_outras, width = 8, height = 4.5, scale = .8)
+
+# todas as áreas, caso fique legível
+
+
+## Area micro
+
+df <- bolsas_rp_simulada %>%
+  group_by(AN_REFERENCIA, DS_AREA_SUBPROJETO) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  mutate(total = sum(num_bolsistas_unicos),
+         perc = num_bolsistas_unicos / total)
+
+p_area_micro_prp <- ggplot(df, aes(x = AN_REFERENCIA, y = perc)) +
+  geom_line() + facet_wrap(~DS_AREA_SUBPROJETO) +
+  labs(x = "Ano de referência",
+       y = "Percentual de bolsistas PRP") +
+  scale_y_continuous(labels = scales::label_percent()) +
+  theme_minimal()
+
+ggsave(p_area_micro_prp, file = "outputs/p_area_micro_prp.png")
+
+# micro area vs genero
+p_genero_area_micro_prp <- bolsas_rp_simulada %>%
+  filter(DS_TIPO_GENERO != "Não informado") %>%
+  group_by(AN_REFERENCIA, DS_AREA_SUBPROJETO, DS_TIPO_GENERO) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  mutate(total = sum(num_bolsistas_unicos),
+         perc = num_bolsistas_unicos/total) %>%
+  ggplot(aes(x=AN_REFERENCIA, y=perc)) + 
+  geom_line() + scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
+  facet_wrap(~ DS_AREA_SUBPROJETO) + 
+  labs(x = "Ano de referência",
+       y = "Percentual de bolsistas PRP",
+       color = "Área") +
+  theme_minimal()
+
+ggsave(p_genero_area_micro_prp, file = "outputs/p_genero_area_micro_prp.png")
+
+
 
 # area vs genero
 p_genero_area_rp <- bolsas_rp_simulada %>%
@@ -186,7 +301,6 @@ ggsave(p_regiao_rp, file = "outputs/p_regiao_rp.png")
 ###
 # UF ao longo do tempo
 df_uf <- bolsas_rp_simulada %>%
-  filter(DS_TIPO_GENERO != "Não informado") %>%
   group_by(AN_REFERENCIA, COD_UF) %>%
   summarise(num_bolsistas_unicos = n_distinct(id)) %>%
   mutate(total = sum(num_bolsistas_unicos),
@@ -267,39 +381,3 @@ p_tempo <- tempo_por_programa %>%
   facet_wrap(~ DS_PROJETO)
 
 ggsave(p_tempo, file = "outputs/p_tempo.png")
-
-## Area micro
-
-df <- bolsas_rp_simulada %>%
-  group_by(AN_REFERENCIA, DS_AREA_SUBPROJETO) %>%
-  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
-  mutate(total = sum(num_bolsistas_unicos),
-         perc = num_bolsistas_unicos / total)
-
-p_area_micro_prp <- ggplot(df, aes(x = AN_REFERENCIA, y = perc)) +
-  geom_line() + facet_wrap(~DS_AREA_SUBPROJETO) +
-  labs(x = "Ano de referência",
-       y = "Percentual de bolsistas PRP") +
-  scale_y_continuous(labels = scales::label_percent()) +
-  theme_minimal()
-
-ggsave(p_area_micro_prp, file = "outputs/p_area_micro_prp.png")
-
-# area vs genero
-p_genero_area_micro_prp <- bolsas_rp_simulada %>%
-  filter(DS_TIPO_GENERO != "Não informado") %>%
-  group_by(AN_REFERENCIA, DS_AREA_SUBPROJETO, DS_TIPO_GENERO) %>%
-  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
-  mutate(total = sum(num_bolsistas_unicos),
-         perc = num_bolsistas_unicos/total) %>%
-  ggplot(aes(x=AN_REFERENCIA, y=perc)) + 
-  geom_line() + scale_y_continuous(labels = scales::label_percent()) +
-  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
-  facet_wrap(~ DS_AREA_SUBPROJETO) + 
-  labs(x = "Ano de referência",
-       y = "Percentual de bolsistas PRP",
-       color = "Área") +
-  theme_minimal()
-
-ggsave(p_genero_area_micro_prp, file = "outputs/p_genero_area_micro_prp.png")
-
