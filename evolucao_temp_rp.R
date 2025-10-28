@@ -94,7 +94,7 @@ p_genero_rp <- bolsas_rp_simulada %>%
 
 ggsave(p_genero_rp, file = "outputs/p_genero_rp.png")
 
-# Área ao longo do tempo
+# Área macro ao longo do tempo
 df <- bolsas_rp_simulada %>%
   group_by(AN_REFERENCIA, area) %>%
   summarise(num_bolsistas_unicos = n_distinct(id)) %>%
@@ -246,4 +246,60 @@ p_edital_rp <- ggplot(df, aes(x = AN_REFERENCIA, y = DS_PROJETO, fill = perc)) +
   theme(legend.position = "bottom")
 
 ggsave(p_edital_rp, file = "outputs/p_edital_rp.png")
+
+
+# tempo mínimo, médio etc.
+tempo_por_programa <- bolsas_rp_simulada %>%
+  mutate(data_inicio = ym(paste(AN_INICIO_BOLSA, ME_INICIO_BOLSA, sep="-")),
+         data_fim = ym(paste(AN_FIM_BOLSA, ME_FIM_BOLSA, sep="-"))) %>%
+  group_by(DS_PROJETO) %>% 
+  summarise(q50 = as.numeric(median(data_fim - data_inicio)),
+            qmin = min(as.numeric(data_fim - data_inicio)),
+            q5 = as.numeric(quantile(data_fim - data_inicio, .05)),
+            q25 = as.numeric(quantile(data_fim - data_inicio, .25)),
+            q75 = as.numeric(quantile(data_fim - data_inicio, .75)),
+            q95 = as.numeric(quantile(data_fim - data_inicio, .95)),
+            qmax = max(as.numeric(data_fim - data_inicio))) %>%
+  pivot_longer(!DS_PROJETO, names_to = "estatistica", values_to = "tempo_bolsa")
+
+p_tempo <- tempo_por_programa %>%
+  ggplot(aes(x=reorder(estatistica,tempo_bolsa), y=tempo_bolsa)) + geom_col() +
+  facet_wrap(~ DS_PROJETO)
+
+ggsave(p_tempo, file = "outputs/p_tempo.png")
+
+## Area micro
+
+df <- bolsas_rp_simulada %>%
+  group_by(AN_REFERENCIA, DS_AREA_SUBPROJETO) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  mutate(total = sum(num_bolsistas_unicos),
+         perc = num_bolsistas_unicos / total)
+
+p_area_micro_prp <- ggplot(df, aes(x = AN_REFERENCIA, y = perc)) +
+  geom_line() + facet_wrap(~DS_AREA_SUBPROJETO) +
+  labs(x = "Ano de referência",
+       y = "Percentual de bolsistas PRP") +
+  scale_y_continuous(labels = scales::label_percent()) +
+  theme_minimal()
+
+ggsave(p_area_micro_prp, file = "outputs/p_area_micro_prp.png")
+
+# area vs genero
+p_genero_area_micro_prp <- bolsas_rp_simulada %>%
+  filter(DS_TIPO_GENERO != "Não informado") %>%
+  group_by(AN_REFERENCIA, DS_AREA_SUBPROJETO, DS_TIPO_GENERO) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  mutate(total = sum(num_bolsistas_unicos),
+         perc = num_bolsistas_unicos/total) %>%
+  ggplot(aes(x=AN_REFERENCIA, y=perc)) + 
+  geom_line() + scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
+  facet_wrap(~ DS_AREA_SUBPROJETO) + 
+  labs(x = "Ano de referência",
+       y = "Percentual de bolsistas PRP",
+       color = "Área") +
+  theme_minimal()
+
+ggsave(p_genero_area_micro_prp, file = "outputs/p_genero_area_micro_prp.png")
 

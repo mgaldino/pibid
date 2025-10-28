@@ -5,7 +5,7 @@ library(ggplot2)
 library(ggrepel)
 library(forcats)
 library(scales)
-
+library(lubridate)
 
 #########
 # PIBID
@@ -314,4 +314,67 @@ p_edital <- ggplot(df, aes(x = AN_REFERENCIA, y = DS_PROJETO, fill = perc)) +
   theme(legend.position = "bottom")
 
 ggsave(p_edital, file = "outputs/p_edital.png", width = 8, height = 4.5, scale = .7)
+
+# tempo mínimo, médio etc.
+tempo_por_programa <- bolsas_pibid_simulada %>%
+  mutate(data_inicio = ym(paste(AN_INICIO_BOLSA, ME_INICIO_BOLSA, sep="-")),
+         data_fim = ym(paste(AN_FIM_BOLSA, ME_FIM_BOLSA, sep="-"))) %>%
+  group_by(DS_PROJETO) %>% 
+  summarise(q50 = as.numeric(median(data_fim - data_inicio)),
+            qmin = min(as.numeric(data_fim - data_inicio)),
+            q5 = as.numeric(quantile(data_fim - data_inicio, .05)),
+            q25 = as.numeric(quantile(data_fim - data_inicio, .25)),
+            q75 = as.numeric(quantile(data_fim - data_inicio, .75)),
+            q95 = as.numeric(quantile(data_fim - data_inicio, .95)),
+            qmax = max(as.numeric(data_fim - data_inicio))) %>%
+  pivot_longer(!DS_PROJETO, names_to = "estatistica", values_to = "tempo_bolsa")
+
+tempo_por_programa %>%
+  ggplot(aes(x=reorder(estatistica,tempo_bolsa), y=tempo_bolsa)) + geom_col() +
+  facet_wrap(~ DS_PROJETO)
+
+# Censo da Educação Superior
+
+# quadro geral
+bolsistas_ces_ano <- bolsas_pibid_simulada %>%
+  filter(NM_NIVEL == "INICIAÇÃO A DOCÊNCIA") %>%
+  group_by(AN_REFERENCIA) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  inner_join(matriculados_ano, join_by(AN_REFERENCIA== NU_ANO_CENSO)) %>%
+  mutate(perc_matriculados = num_bolsistas_unicos/matriculados)
+
+p_bolstistas_ces <- bolsistas_ces_ano %>%
+  mutate(data = lubridate::ym(paste(AN_REFERENCIA, "01", sep="-"))) %>%
+  ggplot(aes(x=data, y = perc_matriculados)) + geom_line() + geom_point() + 
+  scale_y_continuous(labels = scales::percent, limit = c(0, .2)) +
+  labs(x = "Ano", y = "Percentual de martriculados em IES") +
+  theme_minimal(base_size = 11) +
+  theme(legend.position = "bottom")
+
+ggsave(p_bolstistas_ces, file = "outputs/p_bolstistas_ces.png", width = 8, height = 4.5, scale = .7)
+
+# quadro por uf
+bolsistas_ces_ano_uf <- bolsas_pibid_simulada %>%
+  filter(NM_NIVEL == "INICIAÇÃO A DOCÊNCIA") %>%
+  group_by(AN_REFERENCIA, SG_UF_IES_CORRIGIDO) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  inner_join(matriculados_ano_uf, join_by(AN_REFERENCIA== NU_ANO_CENSO, SG_UF_IES_CORRIGIDO==SG_UF)) %>%
+  mutate(perc_matriculados = num_bolsistas_unicos/matriculados)
+
+p_bolstistas_ces_uf <- bolsistas_ces_ano_uf %>%
+  mutate(data = lubridate::ym(paste(AN_REFERENCIA, "01", sep="-"))) %>%
+  ggplot(aes(x=data, y = perc_matriculados)) + geom_line() + geom_point() + 
+  scale_y_continuous(labels = scales::percent) + 
+  scale_x_date(date_labels = "%y", date_breaks = "4 years") + 
+  facet_wrap(~ reorder(SG_UF_IES_CORRIGIDO, perc_matriculados), ncol = 6, scales = "free_y") +
+  labs(x = "Ano de referência",
+       y = "Percentual de bolsistas PIBID matriculados em IES",
+       color = "UF") + 
+  theme_minimal(base_size = 11) 
+
+ggsave(p_bolstistas_ces_uf, file = "outputs/p_bolstistas_ces_uf.png", width = 8, height = 4.5, scale = .7)
+
+
+
+
 
