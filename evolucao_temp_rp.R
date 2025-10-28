@@ -11,6 +11,10 @@ library(scales)
 
 load("dados/bolsas_rp_simulada.RData")
 
+# opcional se não rodar o cript em ces.R
+matriculados_ano <- readRDS("dados transformados/matriculados_ano.rds")
+matriculados_ano_uf <- readRDS("dados transformados/matriculados_ano_uf.rds")
+
 #####
 # Reorganizando dados
 
