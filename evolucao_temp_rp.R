@@ -385,3 +385,62 @@ p_tempo <- tempo_por_programa %>%
   facet_wrap(~ DS_PROJETO)
 
 ggsave(p_tempo, file = "outputs/p_tempo.png")
+
+
+##################
+# Censo da Educação Superior
+#############
+
+# quadro geral
+bolsistas_ces_ano_rp <- bolsas_rp_simulada %>%
+  group_by(AN_REFERENCIA) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  inner_join(matriculados_ano, join_by(AN_REFERENCIA== NU_ANO_CENSO)) %>%
+  mutate(perc_matriculados = num_bolsistas_unicos/matriculados)
+
+p_bolstistas_ces_prp <- bolsistas_ces_ano_rp %>%
+  mutate(data = lubridate::ym(paste(AN_REFERENCIA, "01", sep="-"))) %>%
+  ggplot(aes(x=data, y = perc_matriculados)) + geom_line() + geom_point() + 
+  scale_y_continuous(labels = scales::percent, limit = c(0, .2)) +
+  labs(x = "Ano", y = "Percentual de martriculados em IES") +
+  theme_minimal(base_size = 11) +
+  theme(legend.position = "bottom")
+
+ggsave(p_bolstistas_ces_prp, file = "outputs/p_bolstistas_ces_prp.png", width = 8, height = 4.5, scale = .7)
+
+# quadro por uf
+bolsistas_ces_ano_uf_prp <- bolsas_rp_simulada %>%
+  group_by(AN_REFERENCIA, SG_UF_IES_CORRIGIDO, NM_REGIAO) %>%
+  summarise(num_bolsistas_unicos = n_distinct(id)) %>%
+  inner_join(matriculados_ano_uf, join_by(AN_REFERENCIA== NU_ANO_CENSO, SG_UF_IES_CORRIGIDO==SG_UF)) %>%
+  mutate(perc_matriculados = num_bolsistas_unicos/matriculados)
+
+p_bolstistas_ces_uf_prp <- bolsistas_ces_ano_uf_prp %>%
+  mutate(data = lubridate::ym(paste(AN_REFERENCIA, "01", sep="-"))) %>%
+  ggplot(aes(x=data, y = perc_matriculados)) + geom_line() + geom_point() + 
+  scale_y_continuous(labels = scales::percent) + 
+  scale_x_date(date_labels = "%y", date_breaks = "4 years") + 
+  facet_wrap(~ reorder(SG_UF_IES_CORRIGIDO, perc_matriculados), ncol = 6, scales = "free_y") +
+  labs(x = "Ano de referência",
+       y = "Percentual de bolsistas PIBID matriculados em IES",
+       color = "UF") + 
+  theme_minimal(base_size = 11) 
+
+ggsave(p_bolstistas_ces_uf_prp, file = "outputs/p_bolstistas_ces_uf_prp.png", width = 8, height = 4.5, scale = .7)
+
+
+# quadro por região
+p_bolsistas_ces_ano_regiao_prp <- bolsistas_ces_ano_uf_prp %>%
+  mutate(data = lubridate::ym(paste(AN_REFERENCIA, "01", sep="-"))) %>%
+  ggplot(aes(x=data, y = perc_matriculados)) + geom_line() + geom_point() + 
+  scale_y_continuous(labels = scales::percent) + 
+  scale_x_date(date_labels = "%y", date_breaks = "4 years") + 
+  facet_wrap(~ reorder(NM_REGIAO, perc_matriculados), ncol = 6, scales = "free_y") +
+  labs(x = "Ano de referência",
+       y = "Percentual de bolsistas PIBID matriculados em IES",
+       color = "UF") + 
+  theme_minimal(base_size = 11) 
+
+ggsave(p_bolsistas_ces_ano_regiao_prp, file = "outputs/p_bolsistas_ces_ano_regiao_prp.png", width = 8, height = 4.5, scale = .7)
+
+
