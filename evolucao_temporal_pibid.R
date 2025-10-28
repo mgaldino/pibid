@@ -6,6 +6,7 @@ library(ggrepel)
 library(forcats)
 library(scales)
 library(lubridate)
+library(tidyr)
 
 #########
 # PIBID
@@ -438,6 +439,7 @@ ggsave(p_edital, file = "outputs/p_edital.png", width = 8, height = 4.5, scale =
 
 # tempo mínimo, médio etc.
 tempo_por_programa <- bolsas_pibid_simulada %>%
+  filter(NM_NIVEL == "INICIAÇÃO A DOCÊNCIA") %>%
   mutate(data_inicio = ym(paste(AN_INICIO_BOLSA, ME_INICIO_BOLSA, sep="-")),
          data_fim = ym(paste(AN_FIM_BOLSA, ME_FIM_BOLSA, sep="-"))) %>%
   group_by(DS_PROJETO) %>% 
