@@ -380,9 +380,36 @@ tempo_por_programa <- bolsas_rp_simulada %>%
             qmax = max(as.numeric(data_fim - data_inicio))) %>%
   pivot_longer(!DS_PROJETO, names_to = "estatistica", values_to = "tempo_bolsa")
 
-p_tempo <- tempo_por_programa %>%
-  ggplot(aes(x=reorder(estatistica,tempo_bolsa), y=tempo_bolsa)) + geom_col() +
-  facet_wrap(~ DS_PROJETO)
+ord <- c("qmin","q5","q25","q50","q75","q95","qmax")
+rotulos <- c(
+  qmin = "Mínimo",
+  q5   = "5º percentil",
+  q25  = "25º (Q1)",
+  q50  = "Mediana (Q2)",
+  q75  = "75º (Q3)",
+  q95  = "95º percentil",
+  qmax = "Máximo"
+)
+
+plot_df <- tempo_por_programa %>%
+  mutate(estatistica = factor(estatistica, levels = ord, labels = rotulos))
+
+# 2) Lollipop 
+p_tempo_discente <- plot_df %>%
+  ggplot(aes(x = estatistica, y = tempo_bolsa)) +
+  geom_segment(aes(xend = estatistica, y = 0, yend = tempo_bolsa), linewidth = 0.9, alpha = 0.75) +
+  geom_point(size = 2.6) +
+  coord_flip() +
+  facet_wrap(~DS_PROJETO) +
+  scale_y_continuous(labels = label_number(big.mark = ".", decimal.mark = ",")) +
+  labs(x = NULL, y = "Tempo de bolsa do discente (dias)") +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank())
+
+ggsave(p_tempo_discente, file = "outputs/p_tempo_discente.png", width = 8, height = 4.5, scale = .7)
+
 
 ggsave(p_tempo, file = "outputs/p_tempo.png")
 
