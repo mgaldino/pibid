@@ -28,19 +28,26 @@ matriculados_ano_uf <- readRDS("dados transformados/matriculados_ano_uf.rds")
 
 bolsas_pibid_simulada <- bolsas_pibid_simulada %>%
   mutate(id = paste(NM_BOLSISTA, NR_DOCUMENTO, sep="_"),
-         area = case_when(grepl("LETRAS", DS_AREA_SUBPROJETO) ~ "LETRAS",
+         area = case_when(grepl("LETRAS|ARTES|DANÇA|TEATRO|MÚSICA", DS_AREA_SUBPROJETO) ~ "LETRAS E ARTES",
                           grepl("CAMPO", DS_AREA_SUBPROJETO) ~ "EDUCAÇÃO DO CAMPO",
                           grepl("INDÍGENA|QUILOMBOLA", DS_AREA_SUBPROJETO) ~ "EDUCAÇÃO INDÍGENA OU QUILÓMBOLA",
                           grepl("SURDOS|ESPECIAL", DS_AREA_SUBPROJETO) ~ "EDUCAÇÃO BILÍNGUE DE SURDOS OU ESPECIAL",
                           grepl("FILOSOFIA|HISTÓRIA|GEOGRAFIA|CIÊNCIAS SOCIAIS|SOCIOLOGIA", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS HUMANAS",
-                          grepl("AGRONOMIA|QUÍMICA|BIOLOGIA|CIÊNCIAS AGRÁRIAS|GEOLOGIA", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS NATURAIS",
-                          grepl("ARTES|DANÇA|TEATRO|MÚSICA", DS_AREA_SUBPROJETO) ~ "ARTES",
+                          grepl("AGRONOMIA|CIÊNCIAS AGRÁRIAS", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS AGRÁRIAS",
                           grepl("INFANTIL|ALFABETIZAÇÃO", DS_AREA_SUBPROJETO) ~ "EDUCAÇÃO INFANTIL",
-                          grepl("MATEMÁTICA", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS EXATAS",
-                          grepl("FÍSICA$", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS EXATAS",
+                          grepl("MATEMÁTICA|QUÍMICA|GEOLOGIA|COMPUTAÇÃO", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS EXATAS E DA TERRA",
+                          grepl("^CIÊNCIAS$", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS EXATAS E DA TERRA",
+                          grepl("^FÍSICA$", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS EXATAS E DA TERRA",
+                          grepl("^CIÊNCIAS EXATAS$", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS EXATAS E DA TERRA",
                           grepl("RELIG", DS_AREA_SUBPROJETO) ~ "RELIGIÃO",
+                          grepl("PEDAG|INFANTIL", DS_AREA_SUBPROJETO) ~ "PEDAGOGIA E EDUCAÇÃO INFANTIL",
+                          grepl("EDUCAÇÃO FÍSICA|ENFERMAGEM|BIOLOGIA|PSICOLOGIA", DS_AREA_SUBPROJETO) ~ "CIÊNCIAS DA SAÚDE E BIOLÓGICA",
+                          grepl("INTERDISCIPLINAR|COORDENAÇÃO|SEM INFORMAÇÃO", DS_AREA_SUBPROJETO) ~ "OUTROS",
                           .default = DS_AREA_SUBPROJETO)) 
 
+bolsas_pibid_simulada %>%
+  group_by(area) %>%
+  summarise(n())
 # evolução temporal
 
 # Panorama geral
