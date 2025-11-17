@@ -7,6 +7,7 @@ library(forcats)
 library(scales)
 library(lubridate)
 library(tidyr)
+library(ggthemes)
 
 #########
 # PIBID
@@ -55,12 +56,14 @@ p_geral <- bolsas_pibid_simulada %>%
   filter(NM_NIVEL == "INICIAÇÃO A DOCÊNCIA") %>%
   group_by(AN_REFERENCIA) %>%
   summarise(num_bolsistas_unicos = n_distinct(id)) %>%
-  ggplot(aes(x=AN_REFERENCIA, y=num_bolsistas_unicos)) + geom_line() +
-  scale_x_continuous(breaks = seq(2009, 2022, by=3)) + 
-  scale_y_continuous(labels = scales::label_comma()) +
+  ggplot(aes(x=AN_REFERENCIA, y=num_bolsistas_unicos)) + geom_line(color = "#2CA381", linewidth = 1.2) +
+  geom_point(color = "#2CA381", shape = 15, size = 2.8) + 
+  scale_x_continuous(breaks = seq(2008, 2022, by=3)) + 
+  scale_y_continuous(labels = scales::label_comma(), limits = c(0, NA)) +
   labs(x = "Ano de referência",
        y = "Número de bolsistas PIBID") +
-  theme_minimal()
+  theme_excel_new()
+
 
 ggsave(p_geral, file = "outputs/p_geral.png", width = 8, height = 4.5, scale = .7)
 
