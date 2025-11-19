@@ -6,6 +6,16 @@ library(dplyr)
 ces <- fread("dados/MICRODADOS_2009_2024.csv") 
 glimpse(ces)
 
+# Evolução ead e presencial
+# a fazer.
+# matriculados_ano <- ces %>%
+#   filter(TP_MODALIDADE_ENSINO == 1 & TP_GRAU_ACADEMICO %in% c(2,4)) %>% # filtra modalide presencial e licenciatura
+#   group_by(NU_ANO_CENSO) %>%
+#   summarise(matriculados = sum(QT_MAT),
+#             matriculados_feminino = sum(QT_MAT_FEM),
+#             matriculados_masculino = sum(QT_MAT_MASC))
+
+
 matriculados_ano <- ces %>%
   filter(TP_MODALIDADE_ENSINO == 1 & TP_GRAU_ACADEMICO %in% c(2,4)) %>% # filtra modalide presencial e licenciatura
   group_by(NU_ANO_CENSO) %>%
